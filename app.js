@@ -2,7 +2,7 @@ const express = require("express");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 const path = require("path");
-import { format, compareAsc } from 'date-fns'
+
 
 const databasePath = path.join(__dirname, "todoApplication.db");
 
@@ -131,6 +131,10 @@ app.get("/todos/",async(request,response)=>{
         todo 
       WHERE
         todo LIKE '%${search_q}%';`;
+
+   data = await database.all(getTodosQuery);
+   response.send(data);
+
 });
 
 app.get("/todos/:todoId/", async (request, response) => {
@@ -145,6 +149,7 @@ app.get("/todos/:todoId/", async (request, response) => {
       id = ${todoId};`;
   const todo = await database.get(getTodoQuery);
   response.send(todo);
+
 });
 
 
@@ -166,17 +171,18 @@ app.post("/todos/",async(request,response)=>{
     (${id}, '${todo}', '${priority}', '${status}','${category}','${dueDate}');`;
 
     await database.run(postQuery);
-    response.send("Todo Successfully Added");
+    response.send("Todo Successfully Added")
+
 });
 
 
 
 
-app.put("/todos/:todoId/",async(request,response)=>{
-    const {todoId}=request.params;
-    let updateColumn="";
-    const requestBody=request.body;
-     switch (true) {
+app.put("/todos/:todoId/", async (request, response) => {
+  const { todoId } = request.params;
+  let updateColumn = "";
+  const requestBody = request.body;
+  switch (true) {
     case requestBody.status !== undefined:
       updateColumn = "Status";
       break;
@@ -186,12 +192,11 @@ app.put("/todos/:todoId/",async(request,response)=>{
     case requestBody.todo !== undefined:
       updateColumn = "Todo";
       break;
-    case requestBody.category!==undefined:
-          updateColumn="Category";
-      break;
-    case requestBody.dueDate!==undefined:
+    case requestBody.todo!== undefined:
+        updateColumn="Category";
+        break;
+    case requestBody.todo!==undefined:
         updateColumn="Due Date";
-      break;
   }
   const previousTodoQuery = `
     SELECT
@@ -206,8 +211,9 @@ app.put("/todos/:todoId/",async(request,response)=>{
     todo = previousTodo.todo,
     priority = previousTodo.priority,
     status = previousTodo.status,
-     category=previousTodo.category,
-     dueDate=previousTodo.dueDate,
+    category=previousTodo.category,
+    due_date=previousTodo.due_date
+
   } = request.body;
 
   const updateTodoQuery = `
@@ -218,7 +224,7 @@ app.put("/todos/:todoId/",async(request,response)=>{
       priority='${priority}',
       status='${status}',
       category='${category}',
-      due_date='${dueDate}'
+      due_date='${due_date}'
     WHERE
       id = ${todoId};`;
 
@@ -227,16 +233,18 @@ app.put("/todos/:todoId/",async(request,response)=>{
 
 });
 
-app.delete("/todos/:todoId/",async(request,response)=>{
-    const {todoId}=request.params;
-    const deleteQuery= `
+app.delete("/todos/:todoId/", async (request, response) => {
+  const { todoId } = request.params;
+  const deleteTodoQuery = `
   DELETE FROM
     todo
   WHERE
     id = ${todoId};`;
 
-  await database.run(deleteQuery);
+  await database.run(deleteTodoQuery);
   response.send("Todo Deleted");
+
+  
 });
 
 module.exports=app;
